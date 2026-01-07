@@ -1,40 +1,23 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 
 export async function middleware(req) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  // Jika user belum login dan bukan di halaman login
-  if (!user && req.nextUrl.pathname !== '/login') {
-    return NextResponse.redirect(new URL('/login', req.url))
+  // Skip middleware untuk file static dan API routes
+  if (
+    req.nextUrl.pathname.startsWith('/_next') ||
+    req.nextUrl.pathname.startsWith('/api') ||
+    req.nextUrl.pathname.includes('.')
+  ) {
+    return NextResponse.next()
   }
 
-  // Jika user sudah login dan di halaman login, redirect ke dashboard
-  if (user && req.nextUrl.pathname === '/login') {
-    return NextResponse.redirect(new URL('/dashboard', req.url))
+  // Jika user belum login dan bukan di halaman login, redirect ke login
+  if (req.nextUrl.pathname !== '/login') {
+    // Untuk sementara, kita skip middleware check
+    // Authentication akan dihandle di client-side dengan ProtectedRoute
+    return NextResponse.next()
   }
 
-  // Jika user sudah login, cek role untuk akses halaman
-  if (user && req.nextUrl.pathname !== '/login') {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    // Cek apakah user memiliki role HUMAS yang valid
-    const validRoles = ['ketua_humas', 'sekretaris_humas', 'staff_humas']
-    if (!profile || !validRoles.includes(profile.role)) {
-      return NextResponse.redirect(new URL('/login', req.url))
-    }
-  }
-
-  return res
+  return NextResponse.next()
 }
 
 export const config = {

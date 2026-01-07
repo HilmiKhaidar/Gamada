@@ -1,5 +1,5 @@
 -- =============================================
--- SUPABASE DATABASE SCHEMA
+-- SUPABASE DATABASE SCHEMA - CLEAN VERSION
 -- Aplikasi HUMAS GAMADA - Daarut Tauhid Bandung
 -- =============================================
 
@@ -233,48 +233,9 @@ CREATE POLICY "HUMAS can insert history" ON histori_update
   );
 
 -- =============================================
--- FUNCTIONS AND TRIGGERS
+-- INSERT SAMPLE USER PROFILE
 -- =============================================
 
--- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
--- Triggers for updated_at
-CREATE TRIGGER update_pengurus_humas_updated_at 
-  BEFORE UPDATE ON pengurus_humas 
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_pembina_updated_at 
-  BEFORE UPDATE ON pembina 
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_mitra_updated_at 
-  BEFORE UPDATE ON mitra 
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- =============================================
--- SAMPLE DATA (Optional - for testing)
--- =============================================
-
--- Insert sample profile (manual via Supabase dashboard)
--- INSERT INTO profiles (id, nama, role) VALUES 
--- ('user-uuid-here', 'Admin HUMAS', 'ketua_humas');
-
--- Insert sample data
--- INSERT INTO pengurus_humas (nama, jabatan, kontak, periode) VALUES 
--- ('Ahmad Fauzi', 'Ketua HUMAS', '081234567890', '2024-2025'),
--- ('Siti Nurhaliza', 'Sekretaris', '081234567891', '2024-2025');
-
--- INSERT INTO pembina (nama, peran, kontak, keterangan) VALUES 
--- ('Dr. Abdullah', 'Pembina Utama', '081234567892', 'Ahli Komunikasi'),
--- ('Ustadz Yusuf', 'Pembina Ahli', '081234567893', 'Spesialis Media');
-
--- INSERT INTO mitra (nama_lembaga, kontak, keterangan) VALUES 
--- ('Radio Dakwah FM', '081234567894', 'Kerjasama siaran dakwah'),
--- ('Yayasan Pendidikan Islam', '081234567895', 'Program edukasi bersama');
+-- Insert your profile (ganti UUID dengan yang benar)
+INSERT INTO profiles (id, nama, role) VALUES 
+('a936f303-c9e5-4c0e-8b20-1ffc1f3fc553', 'Hilmi Khaidar', 'ketua_humas');

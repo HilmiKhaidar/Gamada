@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { signIn } from '../../lib/supabaseClient'
+import { signIn, supabase } from '../../lib/supabaseClient'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -24,6 +24,25 @@ export default function LoginPage() {
       router.push('/dashboard')
     }
 
+    setLoading(false)
+  }
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Masukkan email terlebih dahulu')
+      return
+    }
+
+    setLoading(true)
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`
+    })
+
+    if (error) {
+      setError('Gagal mengirim email reset password')
+    } else {
+      alert('Email reset password telah dikirim! Cek inbox Anda.')
+    }
     setLoading(false)
   }
 
@@ -85,6 +104,16 @@ export default function LoginPage() {
                 className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Memproses...' : 'Masuk'}
+              </button>
+            </div>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="text-sm text-green-600 hover:text-green-500"
+              >
+                Lupa Password?
               </button>
             </div>
           </form>
