@@ -3,8 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signIn, supabase } from '../../lib/supabaseClient'
+import { useToast } from '../../components/UiProvider'
 
 export default function LoginPage() {
+  const toast = useToast()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -41,18 +44,18 @@ export default function LoginPage() {
     if (error) {
       setError('Gagal mengirim email reset password')
     } else {
-      alert('Email reset password telah dikirim! Cek inbox Anda.')
+      toast.success('Email reset password telah dikirim! Cek inbox Anda.')
     }
     setLoading(false)
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-pagebg flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">HUMAS GAMADA</h2>
-          <p className="mt-2 text-sm text-gray-600">Daarut Tauhid Bandung</p>
-          <p className="mt-4 text-lg text-gray-700">Masuk ke Sistem</p>
+          <h2 className="text-3xl font-bold text-primary">HUMAS GAMADA</h2>
+          <p className="mt-2 text-sm text-secondary">Daarut Tauhid Bandung</p>
+          <p className="mt-4 text-lg text-secondary">Masuk ke Sistem</p>
         </div>
       </div>
 
@@ -111,7 +114,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={handleForgotPassword}
-                className="text-sm text-green-600 hover:text-green-500"
+                className="text-sm text-primary hover:text-primary/80"
               >
                 Lupa Password?
               </button>

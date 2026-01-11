@@ -1,46 +1,135 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Navbar from '../../components/Navbar'
 import ProtectedRoute from '../../components/ProtectedRoute'
+import { useConfirm, useToast } from '../../components/UiProvider'
 import { 
   fetchData, 
   insertData, 
   updateData, 
   deactivateData, 
-  getCurrentUser 
+  getCurrentUser,
+  getUserProfile,
+  supabase,
 } from '../../lib/supabaseClient'
+import { buildCsv, downloadCsv, statusLabel } from '../../lib/exportCsv'
 
 export default function MitraPage() {
+  const toast = useToast()
+  const { confirm } = useConfirm()
+
+  const realtimeRef = useRef({ timeoutId: null, lastToastAt: 0 })
+
   const [mitra, setMitra] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [currentUser, setCurrentUser] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [exporting, setExporting] = useState(false)
   const [formData, setFormData] = useState({
     nama_lembaga: '',
     kontak: '',
     keterangan: ''
   })
 
-  useEffect(() => {
-    loadData()
-    loadCurrentUser()
-  }, [])
-
-  const loadCurrentUser = async () => {
+  const loadCurrentUser = useCallback(async () => {
     const user = await getCurrentUser()
     setCurrentUser(user)
+
+    if (user) {
+      const { data: userProfile } = await getUserProfile(user.id)
+      setProfile(userProfile)
+    } else {
+      setProfile(null)
+    }
+  }, [])
+
+  const canExport = profile && ['ketua_humas', 'sekretaris_humas'].includes(profile.role)
+
+  const handleExportCsv = async () => {
+    if (!canExport || exporting) return
+
+    setExporting(true)
+    try {
+      const { data, error } = await supabase
+        .from('mitra')
+        .select('nama_lembaga,kontak,keterangan,is_active,created_at')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      const headers = ['Nama Lembaga', 'Kontak', 'Keterangan', 'Status']
+      const rows = (data || []).map((item) => [
+        item.nama_lembaga,
+        item.kontak,
+        item.keterangan || '',
+        statusLabel(item.is_active),
+      ])
+
+      const csv = buildCsv(headers, rows)
+      downloadCsv(csv, 'mitra.csv')
+    } catch (error) {
+      console.error('Error exporting CSV:', error)
+      toast.error('Gagal export CSV')
+    } finally {
+      setExporting(false)
+    }
   }
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true)
     const { data, error } = await fetchData('mitra', { is_active: true })
     if (!error && data) {
       setMitra(data)
     }
     setLoading(false)
-  }
+  }, [])
+
+  useEffect(() => {
+    void loadData()
+    void loadCurrentUser()
+  }, [loadCurrentUser, loadData])
+
+  const scheduleRealtimeRefresh = useCallback(() => {
+    if (realtimeRef.current.timeoutId) return
+
+    const now = Date.now()
+    if (now - realtimeRef.current.lastToastAt > 5000) {
+      toast.info('Ada perubahan data mitra. Memuat ulang...')
+      realtimeRef.current.lastToastAt = now
+    }
+
+    realtimeRef.current.timeoutId = setTimeout(() => {
+      realtimeRef.current.timeoutId = null
+      void loadData()
+    }, 600)
+  }, [loadData, toast])
+
+  useEffect(() => {
+    if (!currentUser) return
+
+    const ref = realtimeRef.current
+    const channel = supabase
+      .channel('realtime-mitra')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'mitra' },
+        () => {
+          scheduleRealtimeRefresh()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      if (ref.timeoutId) {
+        clearTimeout(ref.timeoutId)
+        ref.timeoutId = null
+      }
+      supabase.removeChannel(channel)
+    }
+  }, [currentUser, scheduleRealtimeRefresh])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -51,12 +140,12 @@ export default function MitraPage() {
       if (editingId) {
         const { error } = await updateData('mitra', editingId, formData, currentUser.id)
         if (!error) {
-          alert('Data berhasil diupdate')
+          toast.success('Data berhasil diupdate')
         }
       } else {
         const { error } = await insertData('mitra', formData, currentUser.id)
         if (!error) {
-          alert('Data berhasil ditambahkan')
+          toast.success('Data berhasil ditambahkan')
         }
       }
       
@@ -64,7 +153,7 @@ export default function MitraPage() {
       loadData()
     } catch (error) {
       console.error('Error saving data:', error)
-      alert('Terjadi kesalahan saat menyimpan data')
+      toast.error('Terjadi kesalahan saat menyimpan data')
     }
   }
 
@@ -80,11 +169,19 @@ export default function MitraPage() {
 
   const handleDeactivate = async (id) => {
     if (!currentUser) return
-    
-    if (confirm('Yakin ingin menonaktifkan data ini?')) {
+
+    const ok = await confirm({
+      title: 'Konfirmasi',
+      message: 'Yakin ingin menonaktifkan data ini?',
+      confirmText: 'Ya',
+      cancelText: 'Batal',
+      danger: true,
+    })
+
+    if (ok) {
       const { error } = await deactivateData('mitra', id, currentUser.id)
       if (!error) {
-        alert('Data berhasil dinonaktifkan')
+        toast.success('Data berhasil dinonaktifkan')
         loadData()
       }
     }
@@ -105,7 +202,7 @@ export default function MitraPage() {
       <ProtectedRoute>
         <Navbar />
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
       </ProtectedRoute>
     )
@@ -114,12 +211,12 @@ export default function MitraPage() {
   return (
     <ProtectedRoute>
       <Navbar />
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-white">
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Data Mitra</h1>
-              <p className="mt-2 text-gray-600">Kelola data mitra kerjasama HUMAS GAMADA</p>
+              <h1 className="text-3xl font-bold text-primary">Data Mitra</h1>
+              <p className="mt-2 text-secondary">Kelola data mitra kerjasama HUMAS GAMADA</p>
             </div>
             <button
               onClick={() => setShowForm(true)}
@@ -192,6 +289,32 @@ export default function MitraPage() {
 
           {/* Data Table */}
           <div className="bg-white rounded-lg shadow">
+            <div className="flex justify-end p-3 border-b border-gray-200">
+              {canExport && (
+                <button
+                  type="button"
+                  onClick={handleExportCsv}
+                  title="Unduh data CSV"
+                  disabled={exporting}
+                  className="inline-flex items-center gap-2 rounded border border-gray-200 bg-white px-3 py-2 text-sm text-primary hover:text-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  {exporting ? 'Mengunduh...' : 'Export CSV'}
+                </button>
+              )}
+            </div>
             <div className="table-container">
               <table className="table">
                 <thead className="table-header">
@@ -216,16 +339,16 @@ export default function MitraPage() {
                         <td>{item.kontak}</td>
                         <td>{item.keterangan || '-'}</td>
                         <td>
-                          <div className="flex space-x-2">
+                          <div className="flex flex-wrap gap-2">
                             <button
                               onClick={() => handleEdit(item)}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
+                              className="text-primary hover:text-primary/80 text-sm"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDeactivate(item.id)}
-                              className="text-red-600 hover:text-red-800 text-sm"
+                              className="text-secondary hover:text-primary text-sm"
                             >
                               Nonaktifkan
                             </button>

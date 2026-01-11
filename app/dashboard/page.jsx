@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Navbar from '../../components/Navbar'
 import ProtectedRoute from '../../components/ProtectedRoute'
+import DashboardMiniCalendar from '../../components/DashboardMiniCalendar'
 import { fetchData, getCurrentUser, getUserProfile } from '../../lib/supabaseClient'
 
 export default function DashboardPage() {
@@ -51,7 +52,7 @@ export default function DashboardPage() {
       <ProtectedRoute>
         <Navbar />
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
       </ProtectedRoute>
     )
@@ -60,11 +61,11 @@ export default function DashboardPage() {
   return (
     <ProtectedRoute>
       <Navbar />
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-pagebg">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="mt-2 text-gray-600">
+            <h1 className="text-3xl font-bold text-primary">Dashboard</h1>
+            <p className="mt-2 text-secondary">
               Selamat datang, {profile?.nama}
             </p>
           </div>
@@ -73,13 +74,13 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center">
-                <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+                <div className="p-3 rounded-full bg-primary/10 text-primary">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Pengurus</p>
+                  <p className="text-sm font-medium text-secondary">Total Pengurus</p>
                   <p className="text-2xl font-bold text-gray-900">{stats.pengurus}</p>
                 </div>
               </div>
@@ -87,13 +88,13 @@ export default function DashboardPage() {
 
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center">
-                <div className="p-3 rounded-full bg-green-100 text-green-600">
+                <div className="p-3 rounded-full bg-primary/10 text-primary">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Pembina</p>
+                  <p className="text-sm font-medium text-secondary">Total Pembina</p>
                   <p className="text-2xl font-bold text-gray-900">{stats.pembina}</p>
                 </div>
               </div>
@@ -101,13 +102,13 @@ export default function DashboardPage() {
 
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center">
-                <div className="p-3 rounded-full bg-purple-100 text-purple-600">
+                <div className="p-3 rounded-full bg-primary/10 text-primary">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Mitra</p>
+                  <p className="text-sm font-medium text-secondary">Total Mitra</p>
                   <p className="text-2xl font-bold text-gray-900">{stats.mitra}</p>
                 </div>
               </div>
@@ -123,35 +124,39 @@ export default function DashboardPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <a
                   href="/pengurus"
-                  className="block p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-md transition-all"
+                  className="block p-4 border border-gray-200 rounded-lg hover:border-primary/40 hover:shadow-md transition-all"
                 >
-                  <h3 className="font-medium text-gray-900">Kelola Pengurus</h3>
-                  <p className="mt-1 text-sm text-gray-600">
+                  <h3 className="font-medium text-primary">Kelola Pengurus</h3>
+                  <p className="mt-1 text-sm text-secondary">
                     Tambah, edit, dan kelola data pengurus HUMAS
                   </p>
                 </a>
 
                 <a
                   href="/pembina"
-                  className="block p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-md transition-all"
+                  className="block p-4 border border-gray-200 rounded-lg hover:border-primary/40 hover:shadow-md transition-all"
                 >
-                  <h3 className="font-medium text-gray-900">Kelola Pembina</h3>
-                  <p className="mt-1 text-sm text-gray-600">
+                  <h3 className="font-medium text-primary">Kelola Pembina</h3>
+                  <p className="mt-1 text-sm text-secondary">
                     Tambah, edit, dan kelola data pembina
                   </p>
                 </a>
 
                 <a
                   href="/mitra"
-                  className="block p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-md transition-all"
+                  className="block p-4 border border-gray-200 rounded-lg hover:border-primary/40 hover:shadow-md transition-all"
                 >
-                  <h3 className="font-medium text-gray-900">Kelola Mitra</h3>
-                  <p className="mt-1 text-sm text-gray-600">
+                  <h3 className="font-medium text-primary">Kelola Mitra</h3>
+                  <p className="mt-1 text-sm text-secondary">
                     Tambah, edit, dan kelola data mitra kerjasama
                   </p>
                 </a>
               </div>
             </div>
+          </div>
+
+          <div className="mt-8">
+            <DashboardMiniCalendar />
           </div>
         </div>
       </div>

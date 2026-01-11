@@ -66,17 +66,17 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-pagebg flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-primary/10">
+                <svg className="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                 </svg>
               </div>
-              <h2 className="mt-4 text-lg font-medium text-gray-900">Password Berhasil Diubah</h2>
-              <p className="mt-2 text-sm text-gray-600">
+              <h2 className="mt-4 text-lg font-medium text-primary">Password Berhasil Diubah</h2>
+              <p className="mt-2 text-sm text-secondary">
                 Anda akan diarahkan ke halaman login...
               </p>
             </div>
@@ -87,12 +87,12 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-pagebg flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">HUMAS GAMADA</h2>
-          <p className="mt-2 text-sm text-gray-600">Daarut Tauhid Bandung</p>
-          <p className="mt-4 text-lg text-gray-700">Reset Password</p>
+          <h2 className="text-3xl font-bold text-primary">HUMAS GAMADA</h2>
+          <p className="mt-2 text-sm text-secondary">Daarut Tauhid Bandung</p>
+          <p className="mt-4 text-lg text-secondary">Reset Password</p>
         </div>
       </div>
 
@@ -151,7 +151,7 @@ export default function ResetPasswordPage() {
           <div className="mt-6 text-center">
             <a
               href="/login"
-              className="text-sm text-green-600 hover:text-green-500"
+              className="text-sm text-primary hover:text-primary/80"
             >
               Kembali ke Login
             </a>

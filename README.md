@@ -97,9 +97,61 @@ Edit `.env.local`:
 ```
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SUPABASE_ARSIP_BUCKET=arsip-dokumen
 ```
 
-### 4. Create First User
+### 4. Setup Supabase Storage (untuk Arsip Dokumen)
+Fitur upload/download PDF di menu **Arsip Dokumen** menggunakan Supabase Storage.
+
+1. Buat bucket di Supabase Dashboard: **Storage -> Buckets -> New bucket**
+2. Nama bucket harus sama dengan yang dipakai aplikasi.
+	- Default: `arsip-dokumen`
+	 - Atau ubah lewat env: `NEXT_PUBLIC_SUPABASE_ARSIP_BUCKET`
+
+> Jika bucket belum dibuat, upload akan error: **"Bucket not found"**.
+
+#### (Opsional tapi biasanya wajib) Storage Policies
+Jika bucket sudah ada tapi upload/download masih ditolak (403 / RLS), tambahkan policy untuk `storage.objects`.
+
+Contoh (sesuaikan jika bucket-name berbeda):
+```sql
+-- Allow HUMAS roles to upload/read PDF in arsip bucket
+create policy "HUMAS can upload arsip dokumen" on storage.objects
+for insert to authenticated
+with check (
+	bucket_id = 'arsip-dokumen'
+	and exists (
+		select 1 from public.profiles p
+		where p.id = auth.uid()
+			and p.role in ('ketua_humas','sekretaris_humas','staff_humas')
+	)
+);
+
+create policy "HUMAS can read arsip dokumen" on storage.objects
+for select to authenticated
+using (
+	bucket_id = 'arsip-dokumen'
+	and exists (
+		select 1 from public.profiles p
+		where p.id = auth.uid()
+			and p.role in ('ketua_humas','sekretaris_humas','staff_humas')
+	)
+);
+
+-- Optional: allow ketua/sekretaris to delete (used for best-effort cleanup on failed DB insert)
+create policy "Ketua/Sekretaris can delete arsip dokumen" on storage.objects
+for delete to authenticated
+using (
+	bucket_id = 'arsip-dokumen'
+	and exists (
+		select 1 from public.profiles p
+		where p.id = auth.uid()
+			and p.role in ('ketua_humas','sekretaris_humas')
+	)
+);
+```
+
+### 5. Create First User
 Di Supabase Dashboard:
 1. Go to Authentication > Users
 2. Create new user dengan email/password
@@ -109,7 +161,7 @@ INSERT INTO profiles (id, nama, role) VALUES
 ('user-uuid-from-auth', 'Admin HUMAS', 'ketua_humas');
 ```
 
-### 5. Run Development Server
+### 6. Run Development Server
 ```bash
 npm run dev
 ```
